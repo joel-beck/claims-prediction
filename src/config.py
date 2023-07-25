@@ -21,3 +21,9 @@ class ProcessedDataPaths:
 class DataPaths:
     raw: RawDataPaths = RawDataPaths()  # noqa: RUF009
     processed: ProcessedDataPaths = ProcessedDataPaths()  # noqa: RUF009
+
+
+@dataclass
+class ModelConfig:
+    target: str = "log_claim_amount_per_year"
+    seed: int = 42
