@@ -40,7 +40,7 @@ def binary_to_boolean(expression: pl.Expr) -> pl.Expr:
     return expression.cast(pl.Boolean)
 
 
-def add_boolean_columns(df: pl.LazyFrame) -> pl.LazyFrame:
+def add_boolean_vehicle_gas(df: pl.LazyFrame) -> pl.LazyFrame:
     return df.with_columns(
         is_diesel=binary_to_boolean(pl.col("vehicle_gas") == "Diesel"),
     )

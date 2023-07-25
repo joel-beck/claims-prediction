@@ -2,7 +2,7 @@ import polars as pl
 from config import DataPaths
 from preprocessing import (
     add_binned_columns,
-    add_boolean_columns,
+    add_boolean_vehicle_gas,
     add_claim_amount_per_year,
     add_log_transformations,
     join_target_data,
@@ -34,7 +34,7 @@ def main() -> None:
         .pipe(add_claim_amount_per_year)
         .pipe(add_log_transformations)
         .pipe(add_binned_columns)
-        .pipe(add_boolean_columns)
+        .pipe(add_boolean_vehicle_gas)
         .select(output_columns)
         .collect()
     )
