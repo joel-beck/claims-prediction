@@ -6,7 +6,7 @@ groups = ["default", "dev"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:7198553cde5571656419d08a7839ab3c9870a50b1325771dff5a02d2c76f821b"
+content_hash = "sha256:3c6ff66f598ed6291173fd9de770ef797490f5ffb5db3ff1c3dba42e5fd29045"
 
 [[package]]
 name = "anyio"
@@ -2434,4 +2434,22 @@ summary = "WebSocket client for Python with low level API options"
 files = [
     {file = "websocket-client-1.6.1.tar.gz", hash = "sha256:c951af98631d24f8df89ab1019fc365f2227c0892f12fd150e935607c79dd0dd"},
     {file = "websocket_client-1.6.1-py3-none-any.whl", hash = "sha256:f1f9f2ad5291f0225a49efad77abf9e700b6fef553900623060dad6e26503b9d"},
+]
+
+[[package]]
+name = "xgboost"
+version = "1.7.6"
+requires_python = ">=3.8"
+summary = "XGBoost Python Package"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+files = [
+    {file = "xgboost-1.7.6-py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.macosx_12_0_x86_64.whl", hash = "sha256:4c34675b4d2678c624ddde5d45361e7e16046923e362e4e609b88353e6b87124"},
+    {file = "xgboost-1.7.6-py3-none-macosx_12_0_arm64.whl", hash = "sha256:59b4b366d2cafc7f645e87d897983a5b59be02876194b1d213bd8d8b811d8ce8"},
+    {file = "xgboost-1.7.6-py3-none-manylinux2014_aarch64.whl", hash = "sha256:281c3c6f4fbed2d36bf95cd02a641afa95e72e9abde70064056da5e76233e8df"},
+    {file = "xgboost-1.7.6-py3-none-manylinux2014_x86_64.whl", hash = "sha256:b1d5db49b199152d62bd9217c98760207d3de86d2b9d243260c573ffe638f80a"},
+    {file = "xgboost-1.7.6-py3-none-win_amd64.whl", hash = "sha256:127cf1f5e2ec25cd41429394c6719b87af1456ce583e89f0bffd35d02ad18bcb"},
+    {file = "xgboost-1.7.6.tar.gz", hash = "sha256:1c527554a400445e0c38186039ba1a00425dcdb4e40b37eed0e74cb39a159c47"},
 ]
