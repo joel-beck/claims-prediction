@@ -36,6 +36,7 @@ update-all = { composite = ["update-pdm", "update-deps"] }
 format = "black ."
 lint = "ruff --fix --exit-non-zero-on-fix --show-fixes ."
 check = "mypy ."
+pre = "pre-commit run --all-files"
 
 [tool.black]
 line-length = 100
