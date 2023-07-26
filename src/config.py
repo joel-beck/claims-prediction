@@ -71,22 +71,6 @@ class ModelConfig:
     split_seed: int = 42
 
 
-@dataclass(frozen=True)
-class PipelineKeys:
-    column_transformer: str = "column_transformer"
-    model: str = "model"
-
-
-@dataclass
-class CvConfig:
-    n_folds: int = 5
-    n_iter: int = 1
-    scoring: tuple[str, ...] = ("neg_mean_absolute_error", "neg_mean_squared_error", "r2")
-    refit: str = "neg_mean_squared_error"
-    random_state: int = 123
-    verbose: int = 2
-
-
 @dataclass
 class ParamGrids:
     ridge_regression: ParamGrid = field(default_factory=lambda: {"alpha": np.logspace(-3, 3, 7)})
@@ -107,3 +91,19 @@ class ParamGrids:
             "colsample_bytree": np.arange(0.5, 1.0, 0.1),
         }
     )
+
+
+@dataclass
+class CvConfig:
+    n_folds: int = 5
+    n_iter: int = 20
+    scoring: tuple[str, ...] = ("neg_mean_absolute_error", "neg_mean_squared_error", "r2")
+    refit: str = "neg_mean_squared_error"
+    random_state: int = 123
+    verbose: int = 2
+
+
+@dataclass(frozen=True)
+class PipelineKeys:
+    column_transformer: str = "column_transformer"
+    model: str = "model"
