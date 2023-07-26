@@ -124,6 +124,7 @@ ENV/
 data/
 
 # Model Files
+models/
 *.pth
 *.joblib
 

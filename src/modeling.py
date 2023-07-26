@@ -1,16 +1,21 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, Self, TypeAlias, overload
+from pathlib import Path
+from typing import Any, Protocol, Self, overload
 
+import joblib
 import numpy as np
 import pandas as pd
-from config import CvConfig, ModelConfig, PipelineKeys
+from config import CvConfig, ParamGrid, PipelineKeys
 from sklearn.compose import ColumnTransformer, make_column_selector
-from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-ParamGrid: TypeAlias = dict[str, Sequence]
+
+class NotFittedError(Exception):
+    def __str__(self) -> str:
+        return "The model has not been fitted yet. Call `.fit()` before `.predict()`."
 
 
 class RegressionModel(Protocol):
@@ -19,11 +24,6 @@ class RegressionModel(Protocol):
 
     def predict(self, X_test: Any) -> Any:
         ...
-
-
-class NotFittedError(Exception):
-    def __str__(self) -> str:
-        return "The model has not been fitted yet. Call `.fit()` before `.predict()`."
 
 
 @dataclass
@@ -43,37 +43,9 @@ class BaselineModel:
 
 
 @dataclass
-class DataSplit:
-    X_train: pd.DataFrame
-    X_test: pd.DataFrame
-    y_train: pd.Series
-    y_test: pd.Series
-
-
-@dataclass
 class Predictions:
     model_name: str
     predictions: pd.Series
-
-
-def split_data(df: pd.DataFrame) -> DataSplit:
-    df_train, df_test = train_test_split(
-        df,
-        test_size=ModelConfig.test_size,
-        random_state=ModelConfig.seed,
-    )
-
-    X_train = df_train.drop(ModelConfig.target, axis=1)
-    y_train = df_train[ModelConfig.target]
-
-    X_test = df_test.drop(ModelConfig.target, axis=1)
-    y_test = df_test[ModelConfig.target]
-
-    return DataSplit(X_train, X_test, y_train, y_test)
-
-
-def get_true_values(data_split: DataSplit) -> pd.Series:
-    return data_split.X_test["claim_amount_per_year"]
 
 
 def get_column_transformer() -> ColumnTransformer:
@@ -101,14 +73,23 @@ def setup_pipeline(column_transformer: ColumnTransformer, model: RegressionModel
     )
 
 
-def fit_without_cv(data_split: DataSplit, pipeline: Pipeline) -> Pipeline:
-    return pipeline.fit(data_split.X_train, data_split.y_train)
+def fit_without_cv(X_train: pd.DataFrame, y_train: pd.Series, pipeline: Pipeline) -> Pipeline:
+    return pipeline.fit(X_train, y_train)
+
+
+def prefix_param_grid_keys(param_grid: ParamGrid) -> ParamGrid:
+    """
+    Prefixes all keys of a param_grid with the name of the pipeline step they belong to
+    (e.g. "model__") Allows to set up the param grids with the hyperparameter names only
+    without knowledge about the specific pipeline steps.
+    """
+    return {f"{PipelineKeys.model}__{key}": value for key, value in param_grid.items()}
 
 
 def setup_cv(pipeline: Pipeline, param_grid: ParamGrid) -> RandomizedSearchCV:
     return RandomizedSearchCV(
         estimator=pipeline,
-        param_distributions=param_grid,
+        param_distributions=prefix_param_grid_keys(param_grid),
         cv=CvConfig.n_folds,
         n_iter=CvConfig.n_iter,
         scoring=CvConfig.scoring,
@@ -120,17 +101,19 @@ def setup_cv(pipeline: Pipeline, param_grid: ParamGrid) -> RandomizedSearchCV:
 
 
 def fit_with_cv(
-    data_split: DataSplit,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
     pipeline: Pipeline,
     param_grid: ParamGrid,
 ) -> RandomizedSearchCV:
     cv = setup_cv(pipeline, param_grid)
-    return cv.fit(data_split.X_train, data_split.y_train)
+    return cv.fit(X_train, y_train)
 
 
 @overload
 def fit(
-    data_split: DataSplit,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
     column_transformer: ColumnTransformer,
     model: RegressionModel,
 ) -> Pipeline:
@@ -139,7 +122,8 @@ def fit(
 
 @overload
 def fit(
-    data_split: DataSplit,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
     column_transformer: ColumnTransformer,
     model: RegressionModel,
     param_grid: ParamGrid,
@@ -148,7 +132,8 @@ def fit(
 
 
 def fit(
-    data_split: DataSplit,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
     column_transformer: ColumnTransformer,
     model: RegressionModel,
     param_grid: ParamGrid | None = None,
@@ -156,13 +141,59 @@ def fit(
     pipeline = setup_pipeline(column_transformer, model)
 
     if param_grid is None:
-        return fit_without_cv(data_split, pipeline)
+        return fit_without_cv(X_train, y_train, pipeline)
 
-    return fit_with_cv(data_split, pipeline, param_grid)
+    return fit_with_cv(X_train, y_train, pipeline, param_grid)
 
 
-def predict(data_split: DataSplit, model: Pipeline | RandomizedSearchCV) -> pd.Series:
-    return pd.Series(model.predict(data_split.X_test))
+def predict(X_test: pd.DataFrame, model: Pipeline | RandomizedSearchCV) -> pd.Series:
+    return pd.Series(model.predict(X_test))
+
+
+def save_model(model: Pipeline | RandomizedSearchCV, path: Path) -> None:
+    return joblib.dump(model, path)
+
+
+def load_model(path: Path) -> Pipeline | RandomizedSearchCV:
+    return joblib.load(path)
+
+
+def extract_pipeline_from_cv(cv: RandomizedSearchCV) -> Pipeline:
+    return cv.best_estimator_
+
+
+def remove_all_pipeline_prefixes(keys: Sequence[str] | np.ndarray) -> list[str]:
+    """
+    Removes all prefixes added from scikit-learn Pipelines to display only the original
+    key value. Pipeline prefixes are prepended by double underscores (e.g. "model__").
+    """
+    return [key.split("__")[-1] for key in keys]
+
+
+def extract_hyperparams(cv: RandomizedSearchCV) -> dict[str, int | float]:
+    """
+    Extracts hyperparameter keys and values with the original key names.
+    """
+    return dict(
+        zip(
+            remove_all_pipeline_prefixes(list(cv.best_params_.keys())),
+            cv.best_params_.values(),
+        )
+    )
+
+
+def extract_column_transformer(pipeline: Pipeline | RandomizedSearchCV) -> ColumnTransformer:
+    if isinstance(pipeline, RandomizedSearchCV):
+        pipeline = extract_pipeline_from_cv(pipeline)
+
+    return pipeline.named_steps.column_transformer
+
+
+def extract_model(pipeline: Pipeline | RandomizedSearchCV) -> RegressionModel:
+    if isinstance(pipeline, RandomizedSearchCV):
+        pipeline = extract_pipeline_from_cv(pipeline)
+
+    return pipeline.named_steps.model
 
 
 def collect_predictions(true_values: pd.Series, *predictions: Predictions) -> pd.DataFrame:
