@@ -97,7 +97,7 @@ class ParamGrids:
 @dataclass
 class CvConfig:
     n_folds: int = 5
-    n_iter: int = 1
+    n_iter: int = 100
     scoring: tuple[str, ...] = ("neg_mean_absolute_error", "neg_mean_squared_error", "r2")
     refit: str = "neg_mean_squared_error"
     random_state: int = 123
