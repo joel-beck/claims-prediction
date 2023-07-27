@@ -4,11 +4,11 @@ from sklearn.model_selection import train_test_split
 
 
 def main() -> None:
-    df_complete = pl.read_parquet(DataPaths.processed.complete).to_pandas()
+    df_model = pl.read_parquet(DataPaths.processed.model).to_pandas()
     model_config = ModelConfig()
 
     df_train, df_test = train_test_split(
-        df_complete,
+        df_model,
         test_size=model_config.test_size,
         random_state=model_config.split_seed,
     )

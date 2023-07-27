@@ -45,7 +45,7 @@ class BaselineModel:
 @dataclass
 class Predictions:
     model_name: str
-    predictions: pd.Series
+    predictions: np.ndarray
 
 
 def get_column_transformer() -> ColumnTransformer:
@@ -198,6 +198,7 @@ def extract_model(pipeline: Pipeline | RandomizedSearchCV) -> RegressionModel:
 
 def collect_predictions(true_values: pd.Series, *predictions: Predictions) -> pd.DataFrame:
     predictions_dict = {prediction.model_name: prediction.predictions for prediction in predictions}
-    predictions_dict["true_values"] = true_values
+    # reset index to align with predictions correctly
+    predictions_dict["true_values"] = true_values.to_numpy()
 
     return pd.DataFrame(predictions_dict)

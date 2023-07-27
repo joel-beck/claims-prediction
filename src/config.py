@@ -21,6 +21,7 @@ class RawDataPaths:
 @dataclass(frozen=True)
 class ProcessedDataPaths:
     complete: Path = PROJECT_PATH / "data" / "complete_data.parquet"
+    model: Path = PROJECT_PATH / "data" / "model_data.parquet"
     X_train: Path = PROJECT_PATH / "data" / "X_train.parquet"
     y_train: Path = PROJECT_PATH / "data" / "y_train.parquet"
     X_test: Path = PROJECT_PATH / "data" / "X_test.parquet"
@@ -44,7 +45,7 @@ class DataPaths:
 class ModelPaths:
     baseline: Path = PROJECT_PATH / "models" / "baseline.joblib"
     linear_regression: Path = PROJECT_PATH / "models" / "linear_regression.joblib"
-    ridge_regression: Path = PROJECT_PATH / "models" / "ridge_regression.joblib"
+    lasso_regression: Path = PROJECT_PATH / "models" / "lasso_regression.joblib"
     random_forest: Path = PROJECT_PATH / "models" / "random_forest.joblib"
     xgboost: Path = PROJECT_PATH / "models" / "xgboost.joblib"
 
@@ -55,7 +56,7 @@ class ModelConfig:
     log_target: str = "log_claim_amount_per_year"
     predictors: list[str] = field(
         default_factory=lambda: [
-            "number_claims",
+            "number_claims_binned",
             "driver_age_groups",
             "log_bonus_malus",
             "vehicle_age",
@@ -73,7 +74,7 @@ class ModelConfig:
 
 @dataclass
 class ParamGrids:
-    ridge_regression: ParamGrid = field(default_factory=lambda: {"alpha": np.logspace(-3, 3, 7)})
+    lasso_regression: ParamGrid = field(default_factory=lambda: {"alpha": np.logspace(-3, 3, 7)})
     random_forest: ParamGrid = field(
         default_factory=lambda: {
             "n_estimators": np.arange(100, 1000, 100),
@@ -96,7 +97,7 @@ class ParamGrids:
 @dataclass
 class CvConfig:
     n_folds: int = 5
-    n_iter: int = 20
+    n_iter: int = 1
     scoring: tuple[str, ...] = ("neg_mean_absolute_error", "neg_mean_squared_error", "r2")
     refit: str = "neg_mean_squared_error"
     random_state: int = 123
