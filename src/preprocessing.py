@@ -31,7 +31,7 @@ def add_binned_columns(df: pl.LazyFrame) -> pl.LazyFrame:
     driver age is binned into age groups of 5 years.
     """
     return df.with_columns(
-        number_claims=bin_column(pl.col("number_claims"), bins=[0, 1, 2]),
+        number_claims_binned=bin_column(pl.col("number_claims"), bins=[0, 1, 2]),
         driver_age_groups=bin_column(pl.col("driver_age"), bins=list(range(15, 105, 5))),
     )
 
@@ -44,3 +44,10 @@ def add_boolean_vehicle_gas(df: pl.LazyFrame) -> pl.LazyFrame:
     return df.with_columns(
         is_diesel=binary_to_boolean(pl.col("vehicle_gas") == "Diesel"),
     )
+
+
+def remove_outliers(df: pl.LazyFrame) -> pl.LazyFrame:
+    """
+    Removes 4 outliers with a claim amount per year greater than 500,000.
+    """
+    return df.filter(pl.col("claim_amount_per_year") < 500_000)

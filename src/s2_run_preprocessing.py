@@ -6,6 +6,7 @@ from preprocessing import (
     add_claim_amount_per_year,
     add_log_transformations,
     join_target_data,
+    remove_outliers,
 )
 
 
@@ -17,7 +18,7 @@ def main() -> None:
         "contract_id",
         "claim_amount_per_year",
         "log_claim_amount_per_year",
-        "number_claims",
+        "number_claims_binned",
         "driver_age_groups",
         "log_bonus_malus",
         "vehicle_age",
@@ -35,11 +36,15 @@ def main() -> None:
         .pipe(add_log_transformations)
         .pipe(add_binned_columns)
         .pipe(add_boolean_vehicle_gas)
-        .select(output_columns)
         .collect()
     )
 
+    df_model = df_complete.lazy().select(output_columns).pipe(remove_outliers).collect()
+
+    # contains all original and new features
     df_complete.write_parquet(DataPaths.processed.complete)
+    # contains only features used for modeling
+    df_model.write_parquet(DataPaths.processed.model)
 
 
 if __name__ == "__main__":

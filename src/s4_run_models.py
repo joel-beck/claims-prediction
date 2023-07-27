@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from config import DataPaths, ModelPaths, ParamGrids
 from modeling import (
@@ -10,7 +11,7 @@ from modeling import (
     save_model,
 )
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import Lasso, LinearRegression
 from xgboost import XGBRegressor
 
 
@@ -33,12 +34,12 @@ def main() -> None:
     linear_regression_predictions = predict(X_test, linear_regression_fit)
     save_model(linear_regression_fit, ModelPaths.linear_regression)
 
-    ridge_regression_model = Ridge()
-    ridge_regression_fit = fit(
-        X_train, y_train, column_transformer, ridge_regression_model, param_grids.ridge_regression
+    lasso_regression_model = Lasso()
+    lasso_regression_fit = fit(
+        X_train, y_train, column_transformer, lasso_regression_model, param_grids.lasso_regression
     )
-    ridge_regression_predictions = predict(X_test, ridge_regression_fit)
-    save_model(ridge_regression_fit, ModelPaths.ridge_regression)
+    lasso_regression_predictions = predict(X_test, lasso_regression_fit)
+    save_model(lasso_regression_fit, ModelPaths.lasso_regression)
 
     random_forest_model = RandomForestRegressor()
     random_forest_fit = fit(
@@ -54,11 +55,11 @@ def main() -> None:
 
     predictions_frame = collect_predictions(
         true_test_values,
-        Predictions("baseline", baseline_predictions),
-        Predictions("linear_regression", linear_regression_predictions),
-        Predictions("ridge_regression", ridge_regression_predictions),
-        Predictions("random_forest", random_forest_predictions),
-        Predictions("xgboost", xgb_predictions),
+        Predictions("baseline", np.exp(baseline_predictions)),
+        Predictions("linear_regression", np.exp(linear_regression_predictions)),
+        Predictions("lasso_regression", np.exp(lasso_regression_predictions)),
+        Predictions("random_forest", np.exp(random_forest_predictions)),
+        Predictions("xgboost", np.exp(xgb_predictions)),
     )
     predictions_frame.to_parquet(DataPaths.results.predictions)
 
