@@ -51,9 +51,17 @@ def plot_performance_metrics(predictions_frame: pd.DataFrame) -> None:
         .melt(id_vars="model", var_name="metric", value_name="value")
     )
 
-    sns.catplot(metrics, x="value", y="model", col="metric", kind="bar", sharex=False).set(
-        xlabel=None, ylabel=None
-    )
+    sns.catplot(
+        metrics,
+        kind="strip",
+        x="value",
+        y="model",
+        col="metric",
+        hue="model",
+        sharex=False,
+        size=10,
+        legend=False,
+    ).set(xlabel=None, ylabel=None).set_titles("{col_name}")
 
     plt.show()
 
