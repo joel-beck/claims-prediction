@@ -96,7 +96,7 @@ def setup_cv(pipeline: Pipeline, param_grid: ParamGrid) -> RandomizedSearchCV:
         refit=CvConfig.refit,
         return_train_score=True,
         random_state=CvConfig.random_state,
-        verbose=CvConfig.verbose,
+        verbose=CvConfig.verbose_level,
     )
 
 
