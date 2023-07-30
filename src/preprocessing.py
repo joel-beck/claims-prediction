@@ -46,8 +46,5 @@ def add_boolean_vehicle_gas(df: pl.LazyFrame) -> pl.LazyFrame:
     )
 
 
-def remove_outliers(df: pl.LazyFrame) -> pl.LazyFrame:
-    """
-    Removes 4 outliers with a claim amount per year greater than 500,000.
-    """
-    return df.filter(pl.col("claim_amount_per_year") < 500_000)
+def remove_outliers(df: pl.LazyFrame, threshold: int = 5_000_000) -> pl.LazyFrame:
+    return df.filter(pl.col("claim_amount_per_year") <= threshold)

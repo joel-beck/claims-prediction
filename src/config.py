@@ -101,7 +101,7 @@ class CvConfig:
     scoring: tuple[str, ...] = ("neg_mean_absolute_error", "neg_mean_squared_error", "r2")
     refit: str = "neg_mean_squared_error"
     random_state: int = 123
-    verbose: int = 2
+    verbose_level: int = 2
 
 
 @dataclass(frozen=True)
