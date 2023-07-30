@@ -66,4 +66,3 @@ pdm install
 ```
 
 This will create a new virtual environment and install all the required dependencies.
-
